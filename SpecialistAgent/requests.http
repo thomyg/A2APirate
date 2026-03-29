@@ -1,0 +1,133 @@
+### =============================================================================
+### LEARNING POINT: This file tests the SpecialistAgent WITHOUT an Orchestrator.
+### You can see and try out A2A protocol details directly here.
+### Use the VS Code "REST Client" extension or JetBrains HTTP Client.
+### =============================================================================
+
+@baseUrl = http://localhost:5100
+
+### -------------------------------------------
+### 1. AgentCard Discovery
+### LEARNING POINT: This is the FIRST step in the A2A protocol.
+### Every client first fetches the AgentCard to learn:
+### - What can this agent do?
+### - Does it support streaming?
+### - At which URL is it reachable?
+### -------------------------------------------
+GET {{baseUrl}}/.well-known/agent-card.json
+Accept: application/json
+
+### -------------------------------------------
+### 2. Health Check
+### -------------------------------------------
+GET {{baseUrl}}/health
+
+### -------------------------------------------
+### 3. Send Message (non-streaming, JSON-RPC)
+### LEARNING POINT: A2A uses JSON-RPC 2.0 as its wire format.
+### The "method" determines what happens:
+###   - "message/send" = synchronous response
+###   - "message/sendStream" = SSE stream
+### -------------------------------------------
+POST {{baseUrl}}/a2a/pirate
+Content-Type: application/json
+
+{
+    "jsonrpc": "2.0",
+    "id": "req-001",
+    "method": "message/send",
+    "params": {
+        "message": {
+            "role": "user",
+            "messageId": "msg-001",
+            "parts": [
+                {
+                    "kind": "text",
+                    "text": "Was ist das beste Schiff auf den sieben Meeren?"
+                }
+            ]
+        }
+    }
+}
+
+### -------------------------------------------
+### 4. Streaming Message (SSE)
+### LEARNING POINT: Same endpoint, but method = "message/sendStream".
+### The response comes back as Server-Sent Events (SSE).
+### Each token is a separate event.
+### -------------------------------------------
+POST {{baseUrl}}/a2a/pirate
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+    "jsonrpc": "2.0",
+    "id": "req-002",
+    "method": "message/sendStream",
+    "params": {
+        "message": {
+            "role": "user",
+            "messageId": "msg-002",
+            "parts": [
+                {
+                    "kind": "text",
+                    "text": "Erzaehl mir einen Piraten-Witz!"
+                }
+            ]
+        }
+    }
+}
+
+### -------------------------------------------
+### 5. Conversation Continuity with contextId
+### LEARNING POINT: Same contextId = same conversation thread.
+### The agent remembers previous messages.
+### -------------------------------------------
+POST {{baseUrl}}/a2a/pirate
+Content-Type: application/json
+
+{
+    "jsonrpc": "2.0",
+    "id": "req-003",
+    "method": "message/send",
+    "params": {
+        "message": {
+            "role": "user",
+            "messageId": "msg-003",
+            "parts": [
+                {
+                    "kind": "text",
+                    "text": "Mein Name ist Blackbeard. Merk dir das!"
+                }
+            ]
+        },
+        "configuration": {
+            "contextId": "konversation-42"
+        }
+    }
+}
+
+### Follow-up in the same conversation
+POST {{baseUrl}}/a2a/pirate
+Content-Type: application/json
+
+{
+    "jsonrpc": "2.0",
+    "id": "req-004",
+    "method": "message/send",
+    "params": {
+        "message": {
+            "role": "user",
+            "messageId": "msg-004",
+            "parts": [
+                {
+                    "kind": "text",
+                    "text": "Wie ist mein Name?"
+                }
+            ]
+        },
+        "configuration": {
+            "contextId": "konversation-42"
+        }
+    }
+}
