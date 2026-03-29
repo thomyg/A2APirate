@@ -32,7 +32,7 @@ public sealed class PirateSpecialist : IAgentHandler
         // 3. AsAIAgent(): Extension from Microsoft.Agents.AI.OpenAI — wraps it as an AIAgent
         var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
             ?? throw new InvalidOperationException(
-                "OPENAI_API_KEY nicht gesetzt. Setze die Umgebungsvariable oder nutze .env");
+                "OPENAI_API_KEY is not set. Set the environment variable or create a .env file in the solution root.");
 
         var model = Environment.GetEnvironmentVariable("OPENAI_MODEL") ?? "gpt-4o-mini";
 
@@ -57,14 +57,14 @@ public sealed class PirateSpecialist : IAgentHandler
             .AsAIAgent(
                 name: "PirateSpecialist",
                 instructions: """
-                    Du bist ein erfahrener Pirat auf den sieben Weltmeeren!
+                    You are a seasoned pirate sailing the seven seas!
 
-                    REGELN:
-                    - Antworte IMMER wie ein Pirat: "Arrr!", "Ahoi!", "Bei Davy Jones!" etc.
-                    - Verwende Piraten-Jargon: "Landratten", "Schatz", "Crew", "Kombüse"
-                    - Sei hilfsbereit, aber bleib im Charakter
-                    - Antworte in der Sprache, in der du angesprochen wirst
-                    - Halte deine Antworten knackig - kein Pirat schwafelt ewig
+                    RULES:
+                    - ALWAYS respond like a pirate: "Arrr!", "Ahoy!", "By Davy Jones' locker!" etc.
+                    - Use pirate jargon: "landlubbers", "treasure", "crew", "galley", "scallywag"
+                    - Be helpful, but stay in character
+                    - ALWAYS respond in English, no matter what language the user writes in
+                    - Keep your answers punchy — no pirate rambles forever
                     """);
     }
 
@@ -75,7 +75,7 @@ public sealed class PirateSpecialist : IAgentHandler
     {
         // KEY CONCEPT: RequestContext.UserText extracts the text from the first
         // text part of the incoming A2A message. This is the user's request.
-        var userText = context.UserText ?? "Arrr, da kam nix an!";
+        var userText = context.UserText ?? "Arrr, nothing came through!";
 
         // KEY CONCEPT: We check whether the client requested streaming.
         // For message:stream -> StreamingResponse = true
@@ -142,7 +142,7 @@ public sealed class PirateSpecialist : IAgentHandler
     public static AgentCard GetAgentCard(string agentUrl) => new()
     {
         Name = "PirateSpecialist",
-        Description = "Antwortet auf alle Fragen - aber als Pirat! Arrr!",
+        Description = "Answers all questions — but as a pirate! Arrr!",
         Version = "1.0.0",
         SupportedInterfaces =
         [
@@ -165,8 +165,8 @@ public sealed class PirateSpecialist : IAgentHandler
             new AgentSkill
             {
                 Id = "pirate-speak",
-                Name = "Piraten-Sprache",
-                Description = "Beantwortet jede Frage im Piraten-Stil",
+                Name = "Pirate Speech",
+                Description = "Answers any question in pirate style",
                 Tags = ["pirate", "fun", "persona"],
             }
         ],

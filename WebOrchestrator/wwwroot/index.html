@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A2A Pirate Chat — Protocol Explorer</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f1f3f5;
+    --surface-3: #f5f6f8;
+    --border: #e0e3e8;
+    --border-light: #ebedf0;
+    --text: #1a1a2e;
+    --text-dim: #6b7280;
+    --text-muted: #9ca3af;
+    --accent: #d97706;
+    --accent-bg: #fffbeb;
+    --accent-border: #fde68a;
+    --cyan: #0e7490;
+    --cyan-bg: #ecfeff;
+    --cyan-border: #a5f3fc;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --green-border: #bbf7d0;
+    --purple: #7c3aed;
+    --purple-bg: #f5f3ff;
+    --purple-border: #ddd6fe;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --blue-border: #bfdbfe;
+    --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Header ──────────────────────────── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .logo span { font-size: 13px; color: var(--text-dim); }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 13px; font-family: var(--mono); color: var(--text-dim); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); }
+  .dot.on { background: var(--green); box-shadow: 0 0 6px rgba(22,163,74,0.3); }
+  .btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Main 50/50 split ────────────────── */
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── Left: Chat ──────────────────────── */
+  .chat-pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); min-width: 0; }
+  .pane-title { padding: 10px 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; background: var(--surface-3); border-bottom: 1px solid var(--border-light); flex-shrink: 0; }
+
+  .messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .messages::-webkit-scrollbar { width: 6px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .msg { padding: 12px 16px; border-radius: 10px; font-size: 15px; line-height: 1.6; animation: fadeIn 0.2s ease; max-width: 85%; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+  .msg.user { align-self: flex-end; background: var(--accent-bg); border: 1px solid var(--accent-border); }
+  .msg.pirate { align-self: flex-start; background: var(--cyan-bg); border: 1px solid var(--cyan-border); }
+  .msg-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .msg.user .msg-label { color: var(--accent); }
+  .msg.pirate .msg-label { color: var(--cyan); }
+  .msg-text { word-break: break-word; white-space: pre-wrap; }
+  .cursor { display: inline-block; width: 2px; height: 16px; background: var(--cyan); animation: blink 0.7s infinite; vertical-align: text-bottom; margin-left: 2px; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .input-bar { padding: 12px 20px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 10px; }
+  .input-bar input { flex: 1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 15px; outline: none; }
+  .input-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
+  .input-bar input::placeholder { color: var(--text-muted); }
+  .input-bar input:disabled { opacity: 0.4; }
+  .send-btn { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .send-btn:hover { filter: brightness(1.05); }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 15px; text-align: center; line-height: 1.8; padding: 24px; }
+  .empty code { background: var(--surface-2); padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
+
+  /* ── Right: Inspector ────────────────── */
+  .inspector-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--surface-3); }
+
+  /* Agent Card section */
+  .card-section { padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-y: auto; max-height: 45%; background: var(--surface); }
+  .card-section h3 { font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 700; }
+  .card-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 13px; font-family: var(--mono); }
+  .card-grid .k { color: var(--text-muted); }
+  .card-grid .v { color: var(--text); word-break: break-all; }
+  .card-grid .v.url { color: var(--blue); }
+  .card-grid .v.bool-true { color: var(--green); font-weight: 600; }
+  .card-grid .v.bool-false { color: var(--red); }
+  .card-sub { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-light); }
+  .card-sub h4 { font-size: 12px; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700; }
+  .card-tag { display: inline-block; background: var(--surface-2); color: var(--text-dim); padding: 2px 8px; border-radius: 4px; font-size: 12px; margin: 2px 3px; font-family: var(--mono); }
+  .card-explainer { font-size: 13px; color: var(--text-dim); margin-top: 10px; line-height: 1.6; padding: 8px 12px; background: var(--accent-bg); border-radius: 6px; border-left: 3px solid var(--accent); }
+  .card-explainer code { font-family: var(--mono); font-size: 12px; background: rgba(0,0,0,0.05); padding: 1px 5px; border-radius: 3px; }
+
+  /* Events log */
+  .events-section { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .events-header { padding: 10px 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .events-log { flex: 1; overflow-y: auto; padding: 10px 16px; font-family: var(--mono); font-size: 13px; line-height: 1.6; }
+  .events-log::-webkit-scrollbar { width: 5px; }
+  .events-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .ev { padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; animation: fadeIn 0.1s ease; }
+  .ev .time { color: var(--text-muted); margin-right: 8px; font-size: 12px; }
+  .ev .badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .ev.request { background: var(--blue-bg); border: 1px solid var(--blue-border); }
+  .ev.request .badge { background: var(--blue); color: #fff; }
+  .ev.task { background: var(--purple-bg); border: 1px solid var(--purple-border); }
+  .ev.task .badge { background: var(--purple); color: #fff; }
+  .ev.statusupdate { background: var(--green-bg); border: 1px solid var(--green-border); }
+  .ev.statusupdate .badge { background: var(--green); color: #fff; }
+  .ev.artifactupdate { background: var(--surface); border: 1px solid var(--border-light); color: var(--text-dim); }
+  .ev.artifactupdate .badge { background: var(--surface-2); color: var(--text-muted); }
+  .ev.done { background: var(--accent-bg); border: 1px solid var(--accent-border); }
+  .ev.done .badge { background: var(--accent); color: #fff; }
+  .ev.info { background: var(--accent-bg); border: 1px solid var(--accent-border); color: var(--accent); }
+  .ev.info .badge { background: var(--accent); color: #fff; }
+  .ev.error { background: var(--red-bg); border: 1px solid #fecaca; color: var(--red); }
+  .ev.error .badge { background: var(--red); color: #fff; }
+
+  .ev-detail { color: var(--text-dim); margin-top: 4px; margin-left: 24px; padding-left: 10px; border-left: 2px solid var(--border); font-size: 12px; white-space: pre-wrap; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span style="font-size:26px">🏴‍☠️</span>
+    <div>
+      <h1>A2A Pirate Chat</h1>
+      <span>Agent-to-Agent Protocol Explorer</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status"><div class="dot" id="dot"></div><span id="statusText">Connecting...</span></div>
+    <button class="btn" id="resetBtn">New Chat</button>
+  </div>
+</header>
+
+<div class="main">
+  <!-- LEFT: Chat -->
+  <div class="chat-pane">
+    <div class="pane-title">Chat</div>
+    <div class="messages" id="messages">
+      <div class="empty" id="empty">Send a message to the pirate agent.<br>Watch the <code>A2A protocol</code> unfold in real time on the right.</div>
+    </div>
+    <div class="input-bar">
+      <input type="text" id="input" placeholder="Ask the pirate something..." autocomplete="off" disabled>
+      <button class="send-btn" id="sendBtn" disabled>Send</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Inspector (always visible) -->
+  <div class="inspector-pane">
+    <div class="pane-title">Protocol Inspector</div>
+
+    <div class="card-section" id="cardSection">
+      <h3>AgentCard — Discovery</h3>
+      <div style="color:var(--text-muted); font-size:14px;">Loading agent card...</div>
+    </div>
+
+    <div class="events-section">
+      <div class="events-header">
+        <span>Live Protocol Events</span>
+        <button class="btn" id="clearBtn">Clear</button>
+      </div>
+      <div class="events-log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const messagesEl = $('messages'), empty = $('empty'), inputEl = $('input'), sendBtn = $('sendBtn');
+const dot = $('dot'), statusText = $('statusText'), cardSection = $('cardSection'), log = $('log');
+
+let contextId = crypto.randomUUID();
+let isStreaming = false;
+let agentCard = null;
+
+// ── Boot ────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('/api/agent-card');
+    agentCard = await res.json();
+    dot.classList.add('on');
+    statusText.textContent = agentCard.name;
+    inputEl.disabled = false;
+    sendBtn.disabled = false;
+    inputEl.focus();
+    renderCard(agentCard);
+    logEvt('info', 'Discovery complete', `GET /.well-known/agent-card.json \u2192 200 OK\nThe orchestrator now knows how to reach this agent.`);
+  } catch(e) {
+    statusText.textContent = 'Offline';
+    logEvt('error', 'Discovery failed', 'Is the SpecialistAgent running on port 5100?');
+  }
+}
+
+function renderCard(c) {
+  const iface = (c.supportedInterfaces || [])[0];
+  const skills = c.skills || [];
+  cardSection.innerHTML = `
+    <h3>AgentCard — Discovery</h3>
+    <div class="card-explainer">
+      Every A2A agent exposes a JSON file at <code>GET /.well-known/agent-card.json</code>.
+      This is how agents discover each other at runtime — no hardcoded URLs needed.
+      The orchestrator reads this card first, then knows where and how to send messages.
+    </div>
+    <div class="card-grid" style="margin-top:12px">
+      <span class="k">name</span><span class="v">${c.name}</span>
+      <span class="k">description</span><span class="v">${c.description || '\u2014'}</span>
+      <span class="k">version</span><span class="v">${c.version}</span>
+      <span class="k">streaming</span><span class="v ${c.capabilities?.streaming ? 'bool-true' : 'bool-false'}">${c.capabilities?.streaming ?? false}</span>
+      <span class="k">pushNotify</span><span class="v ${c.capabilities?.pushNotifications ? 'bool-true' : 'bool-false'}">${c.capabilities?.pushNotifications ?? false}</span>
+      <span class="k">inputModes</span><span class="v">${(c.defaultInputModes || []).join(', ')}</span>
+      <span class="k">outputModes</span><span class="v">${(c.defaultOutputModes || []).join(', ')}</span>
+    </div>
+    ${iface ? `
+    <div class="card-sub">
+      <h4>Interface</h4>
+      <div class="card-grid">
+        <span class="k">url</span><span class="v url">${iface.url}</span>
+        <span class="k">protocol</span><span class="v">${iface.protocolBinding} v${iface.protocolVersion}</span>
+      </div>
+      <div class="card-explainer" style="margin-top:8px">
+        This is the JSON-RPC endpoint. The orchestrator sends <code>POST</code> requests here
+        with methods like <code>message/send</code> (sync) or <code>message/sendStream</code> (SSE streaming).
+      </div>
+    </div>` : ''}
+    ${skills.length ? `
+    <div class="card-sub">
+      <h4>Skills</h4>
+      ${skills.map(s => `
+        <div class="card-grid" style="margin-bottom:6px">
+          <span class="k">id</span><span class="v">${s.id}</span>
+          <span class="k">name</span><span class="v">${s.name}</span>
+          <span class="k">description</span><span class="v">${s.description || '\u2014'}</span>
+        </div>
+        <div style="margin-bottom:4px">${(s.tags || []).map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+      `).join('')}
+      <div class="card-explainer" style="margin-top:8px">
+        Skills help an orchestrator decide which agent to route a request to.
+        An LLM reads these descriptions and picks the right specialist automatically.
+      </div>
+    </div>` : ''}
+  `;
+}
+
+// ── Send message ────────────────────────────────────
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || isStreaming) return;
+  inputEl.value = '';
+  isStreaming = true;
+  sendBtn.disabled = true;
+  inputEl.disabled = true;
+
+  if (empty) empty.style.display = 'none';
+  addMsg('user', text);
+
+  const pirateMsg = addMsg('pirate', '');
+  const textEl = pirateMsg.querySelector('.msg-text');
+  const cur = document.createElement('span');
+  cur.className = 'cursor';
+  textEl.appendChild(cur);
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, contextId })
+    });
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', evtType = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('event: ')) {
+          evtType = line.slice(7).trim();
+        } else if (line.startsWith('data: ') && evtType) {
+          handleEvt(evtType, JSON.parse(line.slice(6)), textEl);
+          evtType = '';
+        }
+      }
+    }
+  } catch(e) {
+    logEvt('error', 'Connection failed', e.message);
+    textEl.textContent = 'Connection error \u2014 is the SpecialistAgent running?';
+  }
+
+  cur.remove();
+  isStreaming = false;
+  sendBtn.disabled = false;
+  inputEl.disabled = false;
+  inputEl.focus();
+}
+
+function handleEvt(type, data, textEl) {
+  switch (type) {
+    case 'request':
+      logEvt('request',
+        `Orchestrator \u2192 ${data.agentName}`,
+        `POST ${data.endpoint}\nJSON-RPC method: ${data.method}\nMessageId: ${data.messageId}\nContextId: ${data.contextId?.slice(0,8)}\u2026\nUser text: "${data.text}"\n\n\u2139 The orchestrator sends this as a JSON-RPC request.\n  The specialist will respond with SSE events below.`
+      );
+      break;
+    case 'task':
+      logEvt('task',
+        `${data.payload.contextId ? 'Specialist' : 'Agent'} created Task`,
+        `TaskId: ${data.payload.id}\nStatus: ${data.payload.status}\nContextId: ${data.payload.contextId || '\u2014'}\n\n\u2139 The specialist wraps its response in a Task.\n  Task state: Submitted \u2192 Working \u2192 Completed`
+      );
+      break;
+    case 'statusupdate':
+      logEvt('statusupdate',
+        `Status \u2192 ${data.payload.state}`,
+        data.payload.state === 'Working'
+          ? '\u2139 The agent is now generating a response via the LLM.\n  Text will arrive as ArtifactUpdate events below.'
+          : data.payload.state === 'Completed'
+          ? '\u2139 Response complete. The SSE stream will now close.\n  The task lifecycle is: Submitted \u2192 Working \u2192 Completed'
+          : null
+      );
+      break;
+    case 'artifactupdate': {
+      const txt = data.payload.text;
+      if (txt) {
+        const c = textEl.querySelector('.cursor');
+        if (c) c.insertAdjacentText('beforebegin', txt);
+        else textEl.textContent += txt;
+        scrollChat();
+      }
+      // Log first few chunks, collapse middle, show last
+      if (data.index <= 3) {
+        logEvt('artifactupdate',
+          `Chunk #${data.index}`,
+          data.payload.text ? `"${data.payload.text.slice(0,80)}${data.payload.text.length > 80 ? '\u2026' : ''}"` : '(empty)'
+        );
+      } else if (data.index === 4) {
+        logEvt('artifactupdate', '\u2026 streaming text chunks \u2026',
+          '\u2139 Each token from the LLM arrives as a separate SSE event.\n  The browser appends each chunk to the message in real time.'
+        );
+      }
+      break;
+    }
+    case 'message':
+      if (data.payload.text) {
+        const c = textEl.querySelector('.cursor');
+        if (c) c.insertAdjacentText('beforebegin', data.payload.text);
+        else textEl.textContent += data.payload.text;
+        scrollChat();
+      }
+      logEvt('statusupdate', 'Direct message response', `Role: ${data.payload.role}`);
+      break;
+    case 'done':
+      logEvt('done', `Stream complete`, `${data.totalEvents} SSE events received in total.\n\n\u2139 The full flow was:\n  1. Discovery (GET AgentCard)\n  2. POST message/sendStream\n  3. SSE: Task created \u2192 Working \u2192 Chunks \u2192 Completed`);
+      break;
+  }
+}
+
+// ── DOM helpers ─────────────────────────────────────
+function addMsg(role, text) {
+  const d = document.createElement('div');
+  d.className = `msg ${role}`;
+  d.innerHTML = `<div class="msg-label">${role === 'user' ? 'You' : '\uD83C\uDFF4\u200D\u2620\uFE0F Pirate'}</div><div class="msg-text">${esc(text)}</div>`;
+  messagesEl.appendChild(d);
+  scrollChat();
+  return d;
+}
+
+function scrollChat() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function ts() { return new Date().toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+
+function logEvt(type, title, detail) {
+  const d = document.createElement('div');
+  d.className = `ev ${type}`;
+  d.innerHTML = `<span class="time">${ts()}</span><span class="badge">${type}</span>${esc(title)}`;
+  if (detail) {
+    const det = document.createElement('div');
+    det.className = 'ev-detail';
+    det.textContent = detail;
+    d.appendChild(det);
+  }
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ── Events ──────────────────────────────────────────
+sendBtn.onclick = sendMessage;
+inputEl.onkeydown = e => { if (e.key === 'Enter') sendMessage(); };
+$('resetBtn').onclick = () => {
+  contextId = crypto.randomUUID();
+  messagesEl.innerHTML = '';
+  if (empty) { messagesEl.appendChild(empty); empty.style.display = ''; }
+  logEvt('info', 'New conversation', `contextId: ${contextId.slice(0,8)}\u2026\n\n\u2139 A new contextId means the specialist forgets all previous messages.\n  Same contextId = same conversation thread.`);
+  inputEl.focus();
+};
+$('clearBtn').onclick = () => { log.innerHTML = ''; };
+
+init();
+</script>
+</body>
+</html>

@@ -20,6 +20,12 @@ public sealed class SpecialistProxy
     private AgentCard? _agentCard;
     private A2AClient? _client;
 
+    /// <summary>
+    /// After each streaming call, this holds a summary of SSE events
+    /// that can be printed by the caller (for verbose mode).
+    /// </summary>
+    public StreamingSummary? LastSummary { get; private set; }
+
     public SpecialistProxy(string baseUrl)
     {
         _baseUrl = new Uri(baseUrl);
@@ -39,15 +45,8 @@ public sealed class SpecialistProxy
     {
         if (_agentCard != null) return _agentCard;
 
-        Console.WriteLine($"[Discovery] Requesting AgentCard from: {_baseUrl}");
-
         var resolver = new A2ACardResolver(_baseUrl);
         _agentCard = await resolver.GetAgentCardAsync();
-
-        Console.WriteLine($"[Discovery] Agent found: {_agentCard.Name}");
-        Console.WriteLine($"[Discovery] Description:  {_agentCard.Description}");
-        Console.WriteLine($"[Discovery] Streaming:    {_agentCard.Capabilities?.Streaming}");
-        Console.WriteLine($"[Discovery] Endpoint:      {_agentCard.SupportedInterfaces?.FirstOrDefault()?.Url}");
 
         // Create A2AClient using the URL from the AgentCard
         var endpointUrl = _agentCard.SupportedInterfaces?.FirstOrDefault()?.Url
@@ -66,11 +65,13 @@ public sealed class SpecialistProxy
     ///   - StatusUpdate: Status transition (Submitted -> Working -> Completed)
     ///   - ArtifactUpdate: New content (text chunks during streaming)
     ///   - Message: Direct message response (for non-task-based agents)
+    ///
+    /// Verbose info is NOT printed during streaming (to avoid interleaving).
+    /// Instead it's collected in LastSummary for the caller to print afterwards.
     /// </summary>
     public async IAsyncEnumerable<string> SendStreamingAsync(
         string userText,
-        string? contextId = null,
-        bool verbose = false)
+        string? contextId = null)
     {
         if (_client == null)
             throw new InvalidOperationException("Call DiscoverAsync() first!");
@@ -87,39 +88,30 @@ public sealed class SpecialistProxy
 
         var request = new SendMessageRequest { Message = message };
 
-        if (verbose)
-        {
-            Console.WriteLine();
-            Console.WriteLine($"[HTTP] POST (streaming)");
-            Console.WriteLine($"[HTTP] Method: message/sendStream");
-            Console.WriteLine($"[HTTP] ContextId: {contextId ?? "(new)"}");
-            Console.WriteLine();
-        }
+        // Collect SSE event info for verbose summary (printed AFTER streaming)
+        var summary = new StreamingSummary { ContextId = contextId };
+        var startTime = DateTime.UtcNow;
 
         // LEARNING POINT: SendStreamingMessageAsync returns an IAsyncEnumerable<StreamResponse>.
         // Each StreamResponse event has a PayloadCase indicating what it contains.
         await foreach (var evt in _client.SendStreamingMessageAsync(request))
         {
-            if (verbose)
-            {
-                Console.WriteLine($"  [SSE] PayloadCase={evt.PayloadCase}");
-            }
+            summary.TotalEvents++;
 
             switch (evt.PayloadCase)
             {
                 case StreamResponseCase.Task:
-                    if (verbose)
-                        Console.WriteLine($"  [SSE] Task ID={evt.Task!.Id}, Status={evt.Task.Status.State}");
+                    summary.TaskId ??= evt.Task!.Id;
                     break;
 
                 case StreamResponseCase.StatusUpdate:
-                    if (verbose)
-                        Console.WriteLine($"  [SSE] Status -> {evt.StatusUpdate!.Status.State}");
+                    summary.LastStatus = evt.StatusUpdate!.Status.State.ToString();
                     break;
 
                 case StreamResponseCase.ArtifactUpdate:
                     // LEARNING POINT: ArtifactUpdate contains the actual content chunks.
                     // During streaming, tokens arrive here one by one.
+                    summary.ArtifactEvents++;
                     var artifact = evt.ArtifactUpdate!.Artifact;
                     foreach (var part in artifact.Parts)
                     {
@@ -142,6 +134,9 @@ public sealed class SpecialistProxy
                     break;
             }
         }
+
+        summary.Duration = DateTime.UtcNow - startTime;
+        LastSummary = summary;
     }
 
     /// <summary>
@@ -182,4 +177,17 @@ public sealed class SpecialistProxy
 
         return "[No response from specialist]";
     }
+}
+
+/// <summary>
+/// Summary of a streaming SSE session, printed after the response is complete.
+/// </summary>
+public sealed class StreamingSummary
+{
+    public string? ContextId { get; set; }
+    public string? TaskId { get; set; }
+    public string? LastStatus { get; set; }
+    public int TotalEvents { get; set; }
+    public int ArtifactEvents { get; set; }
+    public TimeSpan Duration { get; set; }
 }

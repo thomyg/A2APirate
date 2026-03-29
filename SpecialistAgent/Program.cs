@@ -2,6 +2,10 @@ using A2A;
 using A2A.AspNetCore;
 using SpecialistAgent.Agents;
 
+// Load .env file from the solution root (one level up from the project folder).
+// .NET doesn't auto-load .env files like Node.js, so we do it manually.
+LoadEnvFile(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".env"));
+
 // =============================================================================
 // LEARNING POINT: SpecialistAgent Startup
 //
@@ -53,12 +57,45 @@ app.MapWellKnownAgentCard(agentCard);
 // Health check endpoint (simple smoke test)
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", agent = "PirateSpecialist" }));
 
-Console.WriteLine("=== PirateSpecialist Agent ===");
-Console.WriteLine($"A2A Endpoint:    POST {agentUrl}");
-Console.WriteLine($"AgentCard:       GET  http://localhost:5100/.well-known/agent-card.json");
-Console.WriteLine($"Health:          GET  http://localhost:5100/health");
-Console.WriteLine($"Swagger:         GET  http://localhost:5100/swagger");
-Console.WriteLine("Waiting for messages... Arrr!");
+Console.WriteLine();
+Console.ForegroundColor = ConsoleColor.Yellow;
+Console.WriteLine("  🏴‍☠️  PirateSpecialist Agent");
+Console.ResetColor();
+Console.ForegroundColor = ConsoleColor.DarkGray;
+Console.WriteLine($"  A2A Endpoint    POST {agentUrl}");
+Console.WriteLine($"  AgentCard       GET  http://localhost:5100/.well-known/agent-card.json");
+Console.WriteLine($"  Health          GET  http://localhost:5100/health");
+Console.WriteLine($"  Swagger         GET  http://localhost:5100/swagger");
+Console.ResetColor();
+Console.WriteLine();
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine("  Ready — waiting for messages... Arrr!");
+Console.ResetColor();
 Console.WriteLine();
 
 app.Run();
+
+// Minimal .env file loader — reads KEY=VALUE pairs and sets them as environment variables.
+// Skips comments (#) and empty lines. Does NOT override already-set variables.
+static void LoadEnvFile(string path)
+{
+    if (!File.Exists(path)) return;
+
+    foreach (var line in File.ReadAllLines(path))
+    {
+        var trimmed = line.Trim();
+        if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
+
+        var separatorIndex = trimmed.IndexOf('=');
+        if (separatorIndex < 0) continue;
+
+        var key = trimmed[..separatorIndex].Trim();
+        var value = trimmed[(separatorIndex + 1)..].Trim();
+
+        // Don't override variables that are already set (e.g. via shell export)
+        if (Environment.GetEnvironmentVariable(key) is null)
+        {
+            Environment.SetEnvironmentVariable(key, value);
+        }
+    }
+}
