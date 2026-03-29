@@ -2,35 +2,32 @@ using A2A;
 using A2A.AspNetCore;
 using SpecialistAgent.Agents;
 
-// Load .env file from the solution root (one level up from the project folder).
-// .NET doesn't auto-load .env files like Node.js, so we do it manually.
+// Load .env file from the solution root
 LoadEnvFile(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".env"));
 
 // =============================================================================
-// LEARNING POINT: SpecialistAgent Startup
+// LEARNING POINT: This server hosts MULTIPLE A2A agents on different paths.
 //
-// This ASP.NET Core server does three things:
-// 1. Registers the PirateSpecialist as an A2A agent in the DI container
-// 2. Exposes POST /a2a/pirate as a JSON-RPC endpoint (message:send, message:stream)
-// 3. Exposes GET /.well-known/agent-card.json (AgentCard Discovery)
+// Each agent has its own:
+//   - IAgentHandler implementation (the brain)
+//   - AgentCard (the discovery metadata)
+//   - POST endpoint (the JSON-RPC receiver)
 //
-// That is all an A2A-compatible agent needs!
+// The DictionaryAgent uses ZERO AI — just a C# Dictionary<string,string>.
+// The PirateSpecialist uses an LLM via the Microsoft Agent Framework.
+// Both speak the exact same A2A protocol.
 // =============================================================================
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Swagger for manual testing (optional, but helpful for learning)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// LEARNING POINT: AddA2AAgent<T>() registers:
-//   - The agent handler (PirateSpecialist) as a Scoped Service
-//   - A2AServer: processes incoming JSON-RPC requests
-//   - InMemoryTaskStore: stores task state for ongoing conversations
-//   - AgentCard: becomes available in the DI container for MapWellKnownAgentCard()
-var agentUrl = "http://localhost:5100/a2a/pirate";
-builder.Services.AddA2AAgent<PirateSpecialist>(
-    PirateSpecialist.GetAgentCard(agentUrl));
+// Register both agents in DI as named/keyed services
+// We use the explicit MapA2A(handler, path) overload for multi-agent support
+builder.Services.AddSingleton<PirateSpecialist>();
+builder.Services.AddSingleton<DictionaryAgent>();
+builder.Services.AddSingleton<InMemoryTaskStore>();
 
 var app = builder.Build();
 
@@ -40,62 +37,91 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// LEARNING POINT: MapA2A() registers a single POST endpoint.
-// Internally, A2AJsonRpcProcessor dispatches based on the JSON-RPC "method":
-//   - "message/send"       -> Synchronous response (JSON)
-//   - "message/sendStream" -> SSE stream (Server-Sent Events)
-//   - "tasks/get"          -> Query task status
-//   - "tasks/cancel"       -> Cancel task
-app.MapA2A("/a2a/pirate");
+// LEARNING POINT: Each agent gets its own A2AServer instance.
+// A2AServer wraps an IAgentHandler and handles the JSON-RPC protocol.
+// MapA2A(handler, path) maps it to a POST endpoint.
 
-// LEARNING POINT: MapWellKnownAgentCard() registers GET /.well-known/agent-card.json
-// This is the discovery endpoint. Other agents find us through this.
-// Without an AgentCard = no A2A. Discovery is fundamental, not optional.
-var agentCard = app.Services.GetRequiredService<AgentCard>();
-app.MapWellKnownAgentCard(agentCard);
+var taskStore = app.Services.GetRequiredService<InMemoryTaskStore>();
+var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 
-// Health check endpoint (simple smoke test)
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", agent = "PirateSpecialist" }));
+// Agent 1: PirateSpecialist (AI-powered)
+var pirateUrl = "http://localhost:5100/a2a/pirate";
+var pirateCard = PirateSpecialist.GetAgentCard(pirateUrl);
+var pirateServer = new A2AServer(
+    app.Services.GetRequiredService<PirateSpecialist>(),
+    taskStore,
+    new ChannelEventNotifier(),
+    loggerFactory.CreateLogger<A2AServer>(),
+    new A2AServerOptions());
+app.MapA2A(pirateServer, "/a2a/pirate");
+
+// Agent 2: DictionaryAgent (zero AI)
+var dictUrl = "http://localhost:5100/a2a/dictionary";
+var dictCard = DictionaryAgent.GetAgentCard(dictUrl);
+var dictServer = new A2AServer(
+    app.Services.GetRequiredService<DictionaryAgent>(),
+    new InMemoryTaskStore(),
+    new ChannelEventNotifier(),
+    loggerFactory.CreateLogger<A2AServer>(),
+    new A2AServerOptions());
+app.MapA2A(dictServer, "/a2a/dictionary");
+
+// LEARNING POINT: Each agent gets its own well-known card endpoint.
+// In production you might have a single discovery endpoint listing all agents,
+// but for learning we keep them separate so you can see each card individually.
+app.MapWellKnownAgentCard(pirateCard);
+
+// Serve individual agent cards by name
+app.MapGet("/agents/pirate/agent-card.json", () => Results.Ok(pirateCard));
+app.MapGet("/agents/dictionary/agent-card.json", () => Results.Ok(dictCard));
+
+// List all hosted agents (for the orchestrator to discover)
+app.MapGet("/agents", () => Results.Ok(new[] { pirateCard, dictCard }));
+
+// Health check
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    agents = new[] { "PirateSpecialist", "DictionaryAgent" }
+}));
 
 Console.WriteLine();
 Console.ForegroundColor = ConsoleColor.Yellow;
-Console.WriteLine("  🏴‍☠️  PirateSpecialist Agent");
+Console.WriteLine("  A2A Agent Host — 2 agents running");
 Console.ResetColor();
 Console.ForegroundColor = ConsoleColor.DarkGray;
-Console.WriteLine($"  A2A Endpoint    POST {agentUrl}");
-Console.WriteLine($"  AgentCard       GET  http://localhost:5100/.well-known/agent-card.json");
-Console.WriteLine($"  Health          GET  http://localhost:5100/health");
-Console.WriteLine($"  Swagger         GET  http://localhost:5100/swagger");
+Console.WriteLine();
+Console.WriteLine("  🏴‍☠️  PirateSpecialist (AI-powered)");
+Console.WriteLine($"     POST {pirateUrl}");
+Console.WriteLine($"     Card GET  http://localhost:5100/agents/pirate/agent-card.json");
+Console.WriteLine();
+Console.WriteLine("  📖 DictionaryAgent (zero AI)");
+Console.WriteLine($"     POST {dictUrl}");
+Console.WriteLine($"     Card GET  http://localhost:5100/agents/dictionary/agent-card.json");
+Console.WriteLine();
+Console.WriteLine("  All agents:  GET  http://localhost:5100/agents");
+Console.WriteLine("  Health:      GET  http://localhost:5100/health");
 Console.ResetColor();
 Console.WriteLine();
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine("  Ready — waiting for messages... Arrr!");
+Console.WriteLine("  Ready — waiting for messages!");
 Console.ResetColor();
 Console.WriteLine();
 
 app.Run();
 
-// Minimal .env file loader — reads KEY=VALUE pairs and sets them as environment variables.
-// Skips comments (#) and empty lines. Does NOT override already-set variables.
 static void LoadEnvFile(string path)
 {
     if (!File.Exists(path)) return;
-
     foreach (var line in File.ReadAllLines(path))
     {
         var trimmed = line.Trim();
         if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
-
-        var separatorIndex = trimmed.IndexOf('=');
-        if (separatorIndex < 0) continue;
-
-        var key = trimmed[..separatorIndex].Trim();
-        var value = trimmed[(separatorIndex + 1)..].Trim();
-
-        // Don't override variables that are already set (e.g. via shell export)
+        var sep = trimmed.IndexOf('=');
+        if (sep < 0) continue;
+        var key = trimmed[..sep].Trim();
+        var value = trimmed[(sep + 1)..].Trim();
         if (Environment.GetEnvironmentVariable(key) is null)
-        {
             Environment.SetEnvironmentVariable(key, value);
-        }
     }
 }
