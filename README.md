@@ -158,10 +158,18 @@ See `SpecialistAgent/requests.http` for more examples.
 │   ├── Program.cs                     <- API backend (discovery, chat, SSE)
 │   └── wwwroot/index.html             <- Single-page UI
 │
-└── docs/
-    ├── 01-what-is-a2a.md             <- What is A2A?
-    ├── 02-agent-card.md              <- AgentCard explained
-    └── 03-protocol-flow.md           <- HTTP flow step by step
+├── docs/
+│   ├── 01-what-is-a2a.md             <- What is A2A?
+│   ├── 02-agent-card.md              <- AgentCard explained
+│   └── 03-protocol-flow.md           <- HTTP flow step by step
+│
+└── .demo/                             <- Demo Time scripts (VS Code extension)
+    ├── 01-agentcard.json              <- Demo 1: AgentCard walkthrough
+    ├── 02-discovery.json              <- Demo 2: Live HTTP discovery
+    ├── 03-streaming.json              <- Demo 3: SSE streaming deep-dive
+    ├── 04-keyword-routing.json        <- Demo 4: Routing without AI
+    ├── 05-ai-routing.json             <- Demo 5: AI vs keyword routing
+    └── slides/                        <- Markdown slides for each demo
 ```
 
 ## Core Concepts
@@ -178,6 +186,20 @@ See `SpecialistAgent/requests.http` for more examples.
 | `A2A.AspNetCore` | ASP.NET Core integration (MapA2A, MapWellKnownAgentCard) |
 | `Microsoft.Agents.AI` | AIAgent, RunAsync/RunStreamingAsync |
 | `Microsoft.Agents.AI.OpenAI` | OpenAI integration, AsAIAgent() extension |
+
+## Guided Demos (Demo Time)
+
+This project includes 5 scripted demos using the [Demo Time](https://marketplace.visualstudio.com/items?itemName=eliostruyf.vscode-demo-time) VS Code extension. Install the extension, open the Demo Time panel, and step through each demo.
+
+| # | Demo | What you learn | Needs server? | Needs API key? |
+|---|------|----------------|---------------|----------------|
+| 1 | The AgentCard | What an AgentCard is, comparing AI vs zero-AI agents | No | No |
+| 2 | Discovery in Action | Live HTTP calls: curl the AgentCard, send JSON-RPC | Yes | No |
+| 3 | Streaming Token by Token | SSE event types, TaskUpdater lifecycle, verbose mode | Yes | Yes |
+| 4 | Routing Without AI | Keyword scoring, tag matching, multi-agent selection | Yes | No |
+| 5 | AI vs Keyword Routing | LLM intent classification, graceful fallback, config toggle | Yes | Yes |
+
+Each demo combines **slides** (explaining the concept), **code highlights** (showing the implementation with blur on surrounding code), and **terminal commands** (running it live).
 
 ## References
 
