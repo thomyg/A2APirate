@@ -1,0 +1,221 @@
+{
+  "$schema": "https://demotime.show/demo-time.schema.json",
+  "title": "Demo 5: AI Routing — When Keywords Aren't Enough",
+  "description": "Compare keyword and AI routing side by side. Same protocol, different decision engine.",
+  "version": 3,
+  "scenes": [
+    {
+      "title": "Introduction",
+      "description": "When keywords aren't enough, let an LLM decide.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/05-ai-routing.md",
+          "slide": 1
+        }
+      ]
+    },
+    {
+      "title": "Keyword vs AI comparison",
+      "description": "Side-by-side comparison of both routing strategies.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/05-ai-routing.md",
+          "slide": 2
+        }
+      ]
+    },
+    {
+      "title": "How AI routing works",
+      "description": "Show the algorithm slide.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/05-ai-routing.md",
+          "slide": 3
+        }
+      ]
+    },
+    {
+      "title": "The RouteByAIAsync method",
+      "description": "Open AgentRouter.cs and highlight the AI routing implementation.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "186:212",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "The LLM prompt — agent catalog",
+      "description": "Show how AgentCards are serialized into a prompt for the LLM.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "217:240",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Graceful fallback",
+      "description": "If AI fails or returns garbage — fall back to keyword. The protocol never breaks.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "271:294",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "The config toggle",
+      "description": "Show .env — one variable switches routing modes.",
+      "moves": [
+        {
+          "action": "open",
+          "path": ".env.example"
+        },
+        {
+          "action": "highlight",
+          "path": ".env.example",
+          "position": "22:29",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Live: Keyword routing — ambiguous input",
+      "description": "Start with keyword mode. Try an ambiguous message.",
+      "moves": [
+        {
+          "action": "openTerminal",
+          "terminalId": "keyword"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "keyword",
+          "command": "cd OrchestratorAgent && dotnet run -- --routing=keyword --verbose",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 40
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        }
+      ]
+    },
+    {
+      "title": "Keyword: ambiguous message",
+      "description": "'I'm feeling curious' has no keyword match — will fall back to default agent.",
+      "moves": [
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "keyword",
+          "command": "I'm feeling curious about how things work",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "Exit keyword orchestrator",
+      "description": "Exit to start AI mode.",
+      "moves": [
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "keyword",
+          "command": "exit",
+          "autoExecute": true,
+          "insertTypingMode": "instant"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": 1000
+        }
+      ]
+    },
+    {
+      "title": "Live: AI routing — same input",
+      "description": "Now switch to AI mode and try the exact same message.",
+      "moves": [
+        {
+          "action": "openTerminal",
+          "terminalId": "ai"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "ai",
+          "command": "cd OrchestratorAgent && dotnet run -- --routing=ai --verbose",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 40
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        }
+      ]
+    },
+    {
+      "title": "AI: same ambiguous message",
+      "description": "The LLM understands intent and routes to the right agent.",
+      "moves": [
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "ai",
+          "command": "I'm feeling curious about how things work",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "AI: indirect creative request",
+      "description": "Try something the AI can interpret but keywords can't.",
+      "moves": [
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "ai",
+          "command": "Make me laugh with something nautical",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "Takeaway",
+      "description": "The protocol stays the same. Only the decision engine changes.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/05-ai-routing.md",
+          "slide": 4
+        }
+      ]
+    }
+  ]
+}

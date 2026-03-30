@@ -1,0 +1,179 @@
+{
+  "$schema": "https://demotime.show/demo-time.schema.json",
+  "title": "Demo 4: Routing Without AI",
+  "description": "Multi-agent routing using only AgentCard metadata — no AI, no API key, no latency.",
+  "version": 3,
+  "scenes": [
+    {
+      "title": "Introduction",
+      "description": "The AgentCard IS the routing table.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/04-keyword-routing.md",
+          "slide": 1
+        }
+      ]
+    },
+    {
+      "title": "How keyword routing works",
+      "description": "Show the scoring system slide.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/04-keyword-routing.md",
+          "slide": 2
+        }
+      ]
+    },
+    {
+      "title": "Scoring system",
+      "description": "Points breakdown.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/04-keyword-routing.md",
+          "slide": 3
+        }
+      ]
+    },
+    {
+      "title": "The AgentRouter — two modes",
+      "description": "Open AgentRouter.cs and show the class-level comment explaining both strategies.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "6:24",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "The routing switch",
+      "description": "Show where Keyword vs AI mode is selected.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "78:84",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "RouteByKeyword — the scoring loop",
+      "description": "The core keyword routing: iterate agents, score each, pick the best.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "96:129",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "ScoreAgent — the points system",
+      "description": "Name match (+10), skill name (+5), tag (+3), description word (+1).",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/AgentRouter.cs",
+          "position": "130:183",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Live demo — keyword routing with verbose",
+      "description": "Start the orchestrator in keyword mode and watch scores.",
+      "moves": [
+        {
+          "action": "openTerminal",
+          "terminalId": "orchestrator"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "orchestrator",
+          "command": "cd OrchestratorAgent && dotnet run -- --verbose",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 40
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        }
+      ]
+    },
+    {
+      "title": "Test: protocol question → DictionaryAgent",
+      "description": "Ask about A2A — the 'a2a' tag should route to DictionaryAgent.",
+      "moves": [
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "orchestrator",
+          "command": "What is the A2A protocol?",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "Test: fun question → PirateSpecialist",
+      "description": "Ask something fun — the 'fun' and 'persona' tags should route to PirateSpecialist.",
+      "moves": [
+        {
+          "action": "waitForTimeout",
+          "timeout": 5000
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "orchestrator",
+          "command": "Tell me a fun pirate joke!",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "Test: name match bonus",
+      "description": "Mention 'pirate' directly — watch the +10 name match score.",
+      "moves": [
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "orchestrator",
+          "command": "Hey pirate, what's your favorite treasure?",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "Takeaway",
+      "description": "No API key, no latency, no tokens.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/04-keyword-routing.md",
+          "slide": 4
+        }
+      ]
+    }
+  ]
+}

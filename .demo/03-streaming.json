@@ -1,0 +1,160 @@
+{
+  "$schema": "https://demotime.show/demo-time.schema.json",
+  "title": "Demo 3: Streaming Token by Token",
+  "description": "Deep-dive into SSE streaming — see how A2A delivers responses event by event.",
+  "version": 3,
+  "scenes": [
+    {
+      "title": "Introduction",
+      "description": "What is SSE and how does A2A use it?",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/03-streaming.md",
+          "slide": 1
+        }
+      ]
+    },
+    {
+      "title": "SSE explained",
+      "description": "Show the SSE event format and how tokens arrive.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/03-streaming.md",
+          "slide": 2
+        }
+      ]
+    },
+    {
+      "title": "Task lifecycle",
+      "description": "Show the state machine: submitted -> working -> completed.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/03-streaming.md",
+          "slide": 3
+        }
+      ]
+    },
+    {
+      "title": "Server side: PirateSpecialist streaming",
+      "description": "How the agent produces the stream — TaskUpdater + RunStreamingAsync.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs",
+          "position": "84:119",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Focus: TaskUpdater lifecycle calls",
+      "description": "Submit → StartWork → AddArtifact (per token) → Complete.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs",
+          "position": "88:90",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Focus: The streaming loop",
+      "description": "Each chunk from RunStreamingAsync becomes an ArtifactUpdate SSE event.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs",
+          "position": "93:109",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Client side: SpecialistProxy receiving",
+      "description": "How the orchestrator consumes the SSE stream.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "OrchestratorAgent/Services/SpecialistProxy.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/SpecialistProxy.cs",
+          "position": "79:147",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Focus: Event type switch",
+      "description": "Task, StatusUpdate, ArtifactUpdate, Message — the four SSE event types.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "OrchestratorAgent/Services/SpecialistProxy.cs",
+          "position": "107:142",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "See it live — verbose mode",
+      "description": "Run the orchestrator with --verbose to see SSE events.",
+      "moves": [
+        {
+          "action": "openTerminal",
+          "terminalId": "orchestrator"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "orchestrator",
+          "command": "cd OrchestratorAgent && dotnet run -- --verbose",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 40
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": 8000
+        }
+      ]
+    },
+    {
+      "title": "Send a message and watch the stream",
+      "description": "Type a message and observe the SSE summary in verbose output.",
+      "moves": [
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "orchestrator",
+          "command": "Tell me about the seven seas!",
+          "autoExecute": true,
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 50
+        }
+      ]
+    },
+    {
+      "title": "Takeaway",
+      "description": "Same stream format, whether AI or dictionary behind it.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/03-streaming.md",
+          "slide": 4
+        }
+      ]
+    }
+  ]
+}

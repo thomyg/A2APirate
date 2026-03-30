@@ -78,8 +78,8 @@ public sealed class PirateSpecialist : IAgentHandler
         var userText = context.UserText ?? "Arrr, nothing came through!";
 
         // KEY CONCEPT: We check whether the client requested streaming.
-        // For message:stream -> StreamingResponse = true
-        // For message:send   -> StreamingResponse = false
+        // For SendStreamingMessage -> StreamingResponse = true
+        // For SendMessage          -> StreamingResponse = false
         if (context.StreamingResponse)
         {
             // KEY CONCEPT: TaskUpdater manages the lifecycle of an A2A task.

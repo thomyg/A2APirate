@@ -26,9 +26,16 @@ public sealed class SpecialistProxy
     /// </summary>
     public StreamingSummary? LastSummary { get; private set; }
 
-    public SpecialistProxy(string baseUrl)
+    public SpecialistProxy(string baseUrl, AgentCard? alreadyDiscovered = null)
     {
         _baseUrl = new Uri(baseUrl);
+
+        // When used by the AgentRouter, the card is already known from /agents
+        if (alreadyDiscovered != null)
+        {
+            _agentCard = alreadyDiscovered;
+            _client = new A2AClient(new Uri(baseUrl));
+        }
     }
 
     /// <summary>
@@ -59,7 +66,7 @@ public sealed class SpecialistProxy
     /// <summary>
     /// LEARNING POINT: Sends a message and streams the response via SSE.
     ///
-    /// SendStreamingMessageAsync() sends a JSON-RPC request with method "message/sendStream".
+    /// SendStreamingMessageAsync() sends a JSON-RPC request with method "SendStreamingMessage".
     /// The response arrives as an IAsyncEnumerable of StreamResponse events:
     ///   - Task: Task was created/updated (contains status)
     ///   - StatusUpdate: Status transition (Submitted -> Working -> Completed)

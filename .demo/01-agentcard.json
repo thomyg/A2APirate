@@ -1,0 +1,142 @@
+{
+  "$schema": "https://demotime.show/demo-time.schema.json",
+  "title": "Demo 1: The AgentCard",
+  "description": "Understand what an AgentCard is — the 'business card' of the A2A protocol. No running code, just reading and understanding.",
+  "version": 3,
+  "scenes": [
+    {
+      "title": "Introduction",
+      "description": "Set the stage: A2A is a protocol, AgentCard is its foundation.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/01-what-is-agentcard.md",
+          "slide": 1
+        }
+      ]
+    },
+    {
+      "title": "What's inside an AgentCard?",
+      "description": "Show the slide explaining AgentCard fields.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/01-what-is-agentcard.md",
+          "slide": 2
+        }
+      ]
+    },
+    {
+      "title": "PirateSpecialist — the AI agent's card",
+      "description": "Open the PirateSpecialist and highlight its AgentCard definition.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs",
+          "position": "142:174",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Focus on Skills and Tags",
+      "description": "Zoom in on the Skills array — these are the routing keywords.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/PirateSpecialist.cs",
+          "position": "163:172",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "DictionaryAgent — the zero-AI agent's card",
+      "description": "Same protocol, different brain. No AI at all.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "SpecialistAgent/Agents/DictionaryAgent.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/DictionaryAgent.cs",
+          "position": "121:153",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Compare the Tags",
+      "description": "The DictionaryAgent has 'no-ai' and 'educational' tags — this will matter for routing later.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Agents/DictionaryAgent.cs",
+          "position": "145:151",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Two agents, same protocol",
+      "description": "Show the comparison slide.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/01-what-is-agentcard.md",
+          "slide": 3
+        }
+      ]
+    },
+    {
+      "title": "How are cards exposed?",
+      "description": "Show Program.cs where MapA2A and MapWellKnownAgentCard register the endpoints.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "SpecialistAgent/Program.cs"
+        },
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Program.cs",
+          "position": "40:79",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "MapA2A — one call, full protocol",
+      "description": "Highlight how MapA2A maps the JSON-RPC endpoint for each agent.",
+      "moves": [
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/Program.cs",
+          "position": "56:67",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Takeaway",
+      "description": "A2A is a protocol, not an AI framework.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/01-what-is-agentcard.md",
+          "slide": 4
+        }
+      ]
+    }
+  ]
+}

@@ -11,7 +11,7 @@ Orchestrator                                    PirateSpecialist
      |     200 OK { name, capabilities, url, ... }    |
      |                                                |
      |  2. POST /a2a/pirate                           |
-     |     { method: "message/sendStream", ... }      |
+     |     { method: "SendStreamingMessage", ... }      |
      | ---------------------------------------------> |
      |                                                |
      | <== SSE Event: task (Submitted) ============== |
@@ -45,7 +45,7 @@ Content-Type: application/json
 {
     "jsonrpc": "2.0",
     "id": "req-001",
-    "method": "message/sendStream",
+    "method": "SendStreamingMessage",
     "params": {
         "message": {
             "role": "user",
@@ -64,7 +64,7 @@ Content-Type: application/json
 
 **Important details:**
 - **jsonrpc: "2.0"**: A2A uses JSON-RPC 2.0 as its wire format
-- **method: "message/sendStream"**: Tells the server that we want SSE streaming
+- **method: "SendStreamingMessage"**: Tells the server that we want SSE streaming (A2A v1.0 uses PascalCase method names)
 - **contextId**: Groups the conversation together (same ID = same thread)
 - **parts**: The actual message, can contain text, files, or structured data
 

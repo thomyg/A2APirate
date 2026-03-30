@@ -1,0 +1,148 @@
+{
+  "$schema": "https://demotime.show/demo-time.schema.json",
+  "title": "Demo 2: Discovery in Action",
+  "description": "Run the server and hit A2A endpoints from the terminal. See the protocol live — no SDK, just HTTP.",
+  "version": 3,
+  "scenes": [
+    {
+      "title": "Introduction",
+      "description": "Discovery is not optional — it's fundamental.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/02-discovery.md",
+          "slide": 1
+        }
+      ]
+    },
+    {
+      "title": "The Discovery Flow",
+      "description": "Show the HTTP sequence before we do it live.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/02-discovery.md",
+          "slide": 2
+        }
+      ]
+    },
+    {
+      "title": "Start the SpecialistAgent",
+      "description": "Launch the agent host in a terminal.",
+      "moves": [
+        {
+          "action": "openTerminal",
+          "terminalId": "specialist"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "specialist",
+          "command": "cd SpecialistAgent && dotnet run",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 40
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": 5000
+        }
+      ]
+    },
+    {
+      "title": "Fetch the well-known AgentCard",
+      "description": "GET /.well-known/agent-card.json — the first thing any A2A client does.",
+      "moves": [
+        {
+          "action": "openTerminal",
+          "terminalId": "demo"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "demo",
+          "command": "curl -s http://localhost:5100/.well-known/agent-card.json | jq .",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 30
+        }
+      ]
+    },
+    {
+      "title": "Fetch all agents",
+      "description": "GET /agents — discover the full catalog of a multi-agent host.",
+      "moves": [
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "demo",
+          "command": "curl -s http://localhost:5100/agents | jq '.[].name'",
+          "insertTypingMode": "character-by-character",
+          "insertTypingSpeed": 30
+        }
+      ]
+    },
+    {
+      "title": "Multi-agent discovery slide",
+      "description": "Explain the /agents endpoint pattern.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/02-discovery.md",
+          "slide": 3
+        }
+      ]
+    },
+    {
+      "title": "Look at the test file",
+      "description": "Open the requests.http file to see what a JSON-RPC message looks like.",
+      "moves": [
+        {
+          "action": "open",
+          "path": "SpecialistAgent/requests.http"
+        },
+        {
+          "action": "highlight",
+          "path": "SpecialistAgent/requests.http",
+          "position": "32:52",
+          "highlightBlur": true,
+          "highlightOpacity": 0.3
+        }
+      ]
+    },
+    {
+      "title": "Send a raw JSON-RPC message",
+      "description": "Talk to the pirate agent using nothing but curl.",
+      "moves": [
+        {
+          "action": "focusTerminal",
+          "terminalId": "demo"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "demo",
+          "command": "curl -s -X POST http://localhost:5100/a2a/pirate -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"SendMessage\",\"params\":{\"message\":{\"role\":\"user\",\"messageId\":\"m1\",\"parts\":[{\"kind\":\"text\",\"text\":\"Ahoy matey!\"}]}}}' | jq .",
+          "insertTypingMode": "instant"
+        }
+      ]
+    },
+    {
+      "title": "Talk to the DictionaryAgent (zero AI)",
+      "description": "Same protocol, no AI behind it — just a lookup table.",
+      "moves": [
+        {
+          "action": "executeTerminalCommand",
+          "terminalId": "demo",
+          "command": "curl -s -X POST http://localhost:5100/a2a/dictionary -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":\"2\",\"method\":\"SendMessage\",\"params\":{\"message\":{\"role\":\"user\",\"messageId\":\"m2\",\"parts\":[{\"kind\":\"text\",\"text\":\"What is A2A?\"}]}}}' | jq .",
+          "insertTypingMode": "instant"
+        }
+      ]
+    },
+    {
+      "title": "Takeaway",
+      "description": "You just spoke A2A — no SDK needed.",
+      "moves": [
+        {
+          "action": "openSlide",
+          "path": ".demo/slides/02-discovery.md",
+          "slide": 4
+        }
+      ]
+    }
+  ]
+}

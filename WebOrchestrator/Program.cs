@@ -111,7 +111,7 @@ app.MapPost("/api/chat", async (HttpContext http, ChatRequest req) =>
 
     await WriteSse(http, ct, "request", new
     {
-        method = "message/sendStream",
+        method = "SendStreamingMessage",
         endpoint = endpointUrl,
         agentId,
         agentName,

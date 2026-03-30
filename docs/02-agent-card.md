@@ -50,7 +50,7 @@ Every A2A agent exposes a JSON file at a well-known URL. This file fully describ
 - **protocolVersion**: Version of the A2A protocol
 
 ### Capabilities (what can the agent do?)
-- **streaming**: Does the agent support SSE streaming? (message/sendStream)
+- **streaming**: Does the agent support SSE streaming? (SendStreamingMessage)
 - **pushNotifications**: Can the agent send push notifications?
 
 ### Skills (what are the agent's abilities?)

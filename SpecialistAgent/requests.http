@@ -26,8 +26,9 @@ GET {{baseUrl}}/health
 ### 3. Send Message (non-streaming, JSON-RPC)
 ### LEARNING POINT: A2A uses JSON-RPC 2.0 as its wire format.
 ### The "method" determines what happens:
-###   - "message/send" = synchronous response
-###   - "message/sendStream" = SSE stream
+###   - "SendMessage" = synchronous response
+###   - "SendStreamingMessage" = SSE stream
+### Note: A2A v1.0 uses PascalCase method names (not slash-separated).
 ### -------------------------------------------
 POST {{baseUrl}}/a2a/pirate
 Content-Type: application/json
@@ -35,7 +36,7 @@ Content-Type: application/json
 {
     "jsonrpc": "2.0",
     "id": "req-001",
-    "method": "message/send",
+    "method": "SendMessage",
     "params": {
         "message": {
             "role": "user",
@@ -52,7 +53,7 @@ Content-Type: application/json
 
 ### -------------------------------------------
 ### 4. Streaming Message (SSE)
-### LEARNING POINT: Same endpoint, but method = "message/sendStream".
+### LEARNING POINT: Same endpoint, but method = "SendStreamingMessage".
 ### The response comes back as Server-Sent Events (SSE).
 ### Each token is a separate event.
 ### -------------------------------------------
@@ -63,7 +64,7 @@ Accept: text/event-stream
 {
     "jsonrpc": "2.0",
     "id": "req-002",
-    "method": "message/sendStream",
+    "method": "SendStreamingMessage",
     "params": {
         "message": {
             "role": "user",
@@ -89,7 +90,7 @@ Content-Type: application/json
 {
     "jsonrpc": "2.0",
     "id": "req-003",
-    "method": "message/send",
+    "method": "SendMessage",
     "params": {
         "message": {
             "role": "user",
@@ -114,7 +115,7 @@ Content-Type: application/json
 {
     "jsonrpc": "2.0",
     "id": "req-004",
-    "method": "message/send",
+    "method": "SendMessage",
     "params": {
         "message": {
             "role": "user",
